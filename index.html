@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Football Club Owner</title>
+<style>
+  :root{
+    --bg:#070910;--panel:#0e1320;--panel2:#12192a;--panel3:#171f33;--border:#242e45;
+    --text:#f5f7fb;--muted:#8f9ab0;--accent:#6d73ff;--accent2:#8a5cff;--good:#52d273;
+    --warn:#ffbd4a;--bad:#ff657a;--info:#4db6ff;--shadow:0 18px 45px rgba(0,0,0,.28);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;min-height:100%;background:var(--bg);color:var(--text);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+  body{overflow-x:hidden}
+  button,input,select{font:inherit}
+  button{cursor:pointer}
+  .hidden{display:none!important}
+  .app-shell{display:flex;min-height:100vh}
+  .sidebar{position:fixed;inset:0 auto 0 0;width:248px;background:linear-gradient(180deg,#0a0e18 0%,#090c14 100%);border-right:1px solid var(--border);padding:20px 14px;z-index:50;display:flex;flex-direction:column}
+  .brand{display:flex;align-items:center;gap:12px;padding:0 8px 22px}
+  .crest{width:42px;height:50px;border:2px solid #747aff;border-radius:10px 10px 18px 18px;position:relative;background:linear-gradient(160deg,#191d38,#0d1020);box-shadow:0 0 24px rgba(109,115,255,.18)}
+  .crest:before{content:"G";position:absolute;inset:0;display:grid;place-items:center;font-weight:900;font-size:22px;letter-spacing:-2px;color:#cbd0ff}
+  .crest:after{content:"";position:absolute;width:8px;height:8px;border-radius:50%;background:#835cff;right:6px;top:6px;box-shadow:-14px 18px 0 #5660ff}
+  .brand h1{font-size:14px;margin:0;letter-spacing:.1em}.brand small{color:var(--muted);font-size:11px}
+  .nav{display:flex;flex-direction:column;gap:4px;flex:1}
+  .nav button{border:0;background:transparent;color:#b8c1d4;text-align:left;padding:10px 12px;border-radius:9px;display:flex;justify-content:space-between;align-items:center}
+  .nav button:hover{background:#11182a;color:#fff}.nav button.active{background:#171f35;color:#fff;box-shadow:inset 3px 0 0 var(--accent)}
+  .badge{min-width:22px;height:20px;border-radius:10px;padding:0 6px;display:inline-grid;place-items:center;background:#2d3552;color:#fff;font-size:11px;font-weight:700}
+  .badge.hot{background:#7b2e41;color:#ffd7df}
+  .sidebar-bottom{border-top:1px solid var(--border);padding-top:10px}
+  .main{margin-left:248px;width:calc(100% - 248px);min-height:100vh}
+  .topbar{height:72px;position:sticky;top:0;z-index:30;background:rgba(7,9,16,.88);backdrop-filter:blur(14px);border-bottom:1px solid rgba(36,46,69,.8);display:flex;align-items:center;justify-content:space-between;padding:0 28px}
+  .top-title{display:flex;align-items:center;gap:10px}.top-title h2{font-size:16px;margin:0}.top-title span{color:var(--muted);font-size:12px}
+  .top-actions{display:flex;align-items:center;gap:10px}
+  .page{padding:28px;max-width:1500px;margin:0 auto}
+  .page-head{display:flex;justify-content:space-between;align-items:flex-end;gap:14px;margin-bottom:22px}.page-head h2{margin:0;font-size:28px}.page-head p{margin:5px 0 0;color:var(--muted)}
+  .grid{display:grid;gap:16px}.grid.kpis{grid-template-columns:repeat(4,minmax(0,1fr))}.grid.two{grid-template-columns:1.1fr .9fr}.grid.three{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .card{background:linear-gradient(180deg,var(--panel) 0%,#0c111c 100%);border:1px solid var(--border);border-radius:14px;padding:18px;box-shadow:var(--shadow)}
+  .card.flat{box-shadow:none}.card h3{margin:0 0 12px;font-size:14px;letter-spacing:.02em}.card .sub{color:var(--muted);font-size:12px}
+  .kpi .label{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.09em}.kpi .value{font-size:28px;font-weight:800;margin-top:8px;letter-spacing:-.04em}.kpi .hint{margin-top:8px;color:var(--muted);font-size:12px}
+  .btn{border:1px solid var(--border);background:#151c2e;color:#fff;padding:10px 14px;border-radius:9px;font-weight:700}.btn:hover{filter:brightness(1.1)}
+  .btn.primary{border-color:#6d73ff;background:linear-gradient(135deg,#5b64f5,#7955e8);box-shadow:0 8px 24px rgba(105,91,245,.22)}
+  .btn.good{border-color:#306b46;background:#173724;color:#bdf7ca}.btn.bad{border-color:#743645;background:#381a22;color:#ffc2cc}.btn.warn{border-color:#70592b;background:#332916;color:#ffe0a1}.btn.ghost{background:transparent}.btn:disabled{cursor:not-allowed;opacity:.38;filter:none}
+  .next-week{padding:12px 18px;font-size:13px;letter-spacing:.06em}
+  .hero{position:relative;overflow:hidden;background:radial-gradient(circle at 80% 10%,rgba(109,115,255,.17),transparent 32%),linear-gradient(135deg,#11182a,#0b101b);padding:24px}
+  .hero:after{content:"";position:absolute;width:240px;height:240px;border:1px solid rgba(109,115,255,.12);border-radius:50%;right:-80px;top:-95px;box-shadow:0 0 0 32px rgba(109,115,255,.025),0 0 0 64px rgba(109,115,255,.018)}
+  .club-lockup{display:flex;align-items:center;gap:16px}.club-lockup .crest{width:58px;height:68px}.club-lockup .crest:before{font-size:30px}.hero h1{margin:0;font-size:32px;letter-spacing:-.04em}.hero p{margin:6px 0 0;color:var(--muted)}
+  .section-title{display:flex;justify-content:space-between;align-items:center;margin:24px 0 10px}.section-title h3{margin:0;font-size:15px}.section-title a{font-size:12px;color:#9ea8ff;cursor:pointer}
+  .form{display:flex;gap:6px}.form-pill{width:30px;height:30px;border-radius:8px;display:grid;place-items:center;font-weight:800;font-size:12px;background:#20283a}.form-pill.W{background:#173c29;color:#72e590}.form-pill.D{background:#3b3321;color:#ffcf6f}.form-pill.L{background:#42202b;color:#ff8c9d}
+  .fixture-focus{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;text-align:center;gap:16px;padding:18px 8px}.team-name{font-size:16px;font-weight:800}.vs{color:var(--muted);font-size:12px;border:1px solid var(--border);border-radius:20px;padding:6px 10px}
+  .result-score{font-size:28px;font-weight:900;letter-spacing:.08em}
+  .table-wrap{overflow:auto;border-radius:10px;border:1px solid var(--border)}
+  table{width:100%;border-collapse:collapse;min-width:680px;background:#0b101b}th,td{padding:11px 12px;border-bottom:1px solid #20283a;text-align:left;font-size:12px;white-space:nowrap}th{position:sticky;top:0;background:#11182a;color:#8f9ab0;text-transform:uppercase;letter-spacing:.06em;font-size:10px}tbody tr:hover{background:#11182a}.me-row{background:#151d35!important;box-shadow:inset 3px 0 0 var(--accent)}
+  .pos{display:inline-flex;align-items:center;justify-content:center;min-width:38px;padding:4px 7px;border:1px solid #303b56;border-radius:7px;color:#c5cee0;font-size:10px;font-weight:800}.ovr{font-weight:900;font-size:14px;color:#fff}.clickable{cursor:pointer}
+  .status{display:inline-flex;align-items:center;gap:6px}.dot{width:7px;height:7px;border-radius:50%;background:#77839a}.dot.good{background:var(--good)}.dot.warn{background:var(--warn)}.dot.bad{background:var(--bad)}
+  .inbox-card{border-left:3px solid #6974ff}.inbox-card.transfer{border-left-color:#55b5ff}.inbox-card.contract{border-left-color:#f0ba50}.inbox-card.alert{border-left-color:#ff647b}.inbox-card.resolved{opacity:.55}.inbox-top{display:flex;justify-content:space-between;gap:14px}.eyebrow{font-size:10px;text-transform:uppercase;letter-spacing:.12em;color:#8490a7;font-weight:800}.inbox-card h3{font-size:18px;margin:6px 0}.inbox-card p{color:#b8c1d1;line-height:1.5}.quote{border-left:2px solid #38435d;padding-left:12px;color:#9ea8bc;font-style:italic}.actions{display:flex;flex-wrap:wrap;gap:9px;margin-top:14px}
+  .metric-row{display:flex;justify-content:space-between;gap:20px;padding:9px 0;border-bottom:1px solid #20283a;font-size:12px}.metric-row:last-child{border-bottom:0}.metric-row span:first-child{color:var(--muted)}
+  .bar{height:8px;background:#20283a;border-radius:10px;overflow:hidden}.bar > i{display:block;height:100%;background:linear-gradient(90deg,#5e68f4,#8f5fe8);border-radius:10px}
+  .progress-label{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin:8px 0 6px}
+  .manager-head{display:flex;align-items:center;gap:16px}.avatar{width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,#202b48,#111626);display:grid;place-items:center;font-size:20px;font-weight:900;border:1px solid #394662}.manager-name{font-size:22px;font-weight:900}.manager-meta{color:var(--muted);font-size:12px;margin-top:3px}
+  .attrs{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-top:16px}.attr{padding:12px;background:#101727;border:1px solid #222d45;border-radius:10px;text-align:center}.attr strong{display:block;font-size:20px}.attr span{display:block;color:var(--muted);font-size:10px;text-transform:uppercase;margin-top:4px}
+  .candidate{display:flex;flex-direction:column;gap:10px}.candidate h3{font-size:20px;margin:0}.candidate .rating{font-size:32px;font-weight:900;color:#d4d7ff}
+  .money.good{color:#72e590}.money.bad{color:#ff8193}.money.neutral{color:#dce2ef}
+  .slider{width:100%;accent-color:#7379ff}.big-price{font-size:34px;font-weight:900}
+  .upgrade{display:flex;justify-content:space-between;gap:20px;align-items:center;padding:14px 0;border-bottom:1px solid #20283a}.upgrade:last-child{border-bottom:0}.upgrade h4{margin:0 0 4px}.upgrade p{margin:0;color:var(--muted);font-size:12px}
+  .news{display:flex;flex-direction:column}.news-item{padding:10px 0;border-bottom:1px solid #20283a;font-size:12px;color:#c2cada}.news-item:last-child{border-bottom:0}.news-item time{display:block;color:#6f7b93;font-size:10px;margin-top:4px}
+  .empty{padding:34px;text-align:center;color:var(--muted)}
+  .modal-backdrop{position:fixed;inset:0;background:rgba(2,4,9,.78);z-index:200;display:grid;place-items:center;padding:20px;backdrop-filter:blur(7px)}
+  .modal{width:min(760px,100%);max-height:90vh;overflow:auto;background:#0d1320;border:1px solid #2b3550;border-radius:16px;box-shadow:0 30px 80px rgba(0,0,0,.55);padding:22px}.modal.wide{width:min(980px,100%)}.modal-head{display:flex;justify-content:space-between;gap:20px;align-items:flex-start}.modal h2{margin:0 0 4px}.close{width:34px;height:34px;border:1px solid var(--border);border-radius:9px;background:#131b2b;color:#fff}
+  .summary-score{text-align:center;padding:22px 0}.summary-score .clubs{color:var(--muted);font-size:13px}.summary-score .score{font-size:48px;font-weight:900;letter-spacing:.06em;margin:7px 0}
+  .toast{position:fixed;right:22px;bottom:22px;z-index:400;background:#171f31;border:1px solid #35415e;color:#fff;padding:12px 16px;border-radius:10px;box-shadow:var(--shadow);font-size:12px;animation:toastIn .25s ease-out}
+  @keyframes toastIn{from{transform:translateY(10px);opacity:0}to{transform:none;opacity:1}}
+  .intro{min-height:100vh;display:grid;place-items:center;padding:28px;background:radial-gradient(circle at 50% 15%,rgba(93,100,245,.2),transparent 30%),#060810}.intro-card{width:min(840px,100%);text-align:center;padding:54px 34px;border:1px solid #26314a;border-radius:22px;background:linear-gradient(180deg,rgba(16,23,39,.96),rgba(9,13,23,.96));box-shadow:0 40px 100px rgba(0,0,0,.5)}.intro .crest{margin:0 auto 22px;width:78px;height:92px}.intro .crest:before{font-size:40px}.intro h1{font-size:50px;letter-spacing:-.05em;margin:0}.intro h2{font-size:18px;color:#c9ceff;margin:12px 0 0}.intro p{max-width:590px;margin:18px auto 28px;color:#98a3b8;line-height:1.65}.intro .btn{padding:14px 22px}
+  .mobile-menu{display:none}.mobile-overlay{display:none}
+  .season-banner{padding:14px 16px;border:1px solid #524821;background:#211e13;color:#f8dda2;border-radius:10px;margin-bottom:18px}
+  .rank-1{color:#ffd86b;font-weight:900}.rank-2{color:#ced7ea;font-weight:900}.rank-3{color:#c99569;font-weight:900}
+  .positive{color:var(--good)}.negative{color:var(--bad)}.muted{color:var(--muted)}
+  .pill{display:inline-flex;padding:5px 8px;border-radius:20px;background:#1b2438;color:#cbd3e4;font-size:10px;font-weight:700}
+  .tooltip{border-bottom:1px dotted #7d88a0;cursor:help}
+  @media(max-width:1050px){.grid.kpis{grid-template-columns:repeat(2,1fr)}.grid.two{grid-template-columns:1fr}.grid.three{grid-template-columns:1fr 1fr}.attrs{grid-template-columns:repeat(3,1fr)}}
+  @media(max-width:760px){.sidebar{transform:translateX(-100%);transition:.2s}.sidebar.open{transform:none}.main{margin-left:0;width:100%}.topbar{padding:0 14px}.mobile-menu{display:inline-flex}.page{padding:18px 14px}.grid.kpis,.grid.three{grid-template-columns:1fr}.page-head{align-items:flex-start;flex-direction:column}.top-title span{display:none}.top-actions .meta-hide{display:none}.attrs{grid-template-columns:repeat(2,1fr)}.intro h1{font-size:34px}.mobile-overlay.show{display:block;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:40}.hero h1{font-size:25px}}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+(() => {
+  'use strict';
+
+  const STORAGE_KEY = 'footballClubOwner_v1';
+  const GALAXY_ID = 'galaxy';
+  const START_YEAR = 2026;
+  const fmtMoney = n => {
+    const sign = n < 0 ? '-' : '';
+    const v = Math.abs(n);
+    if (v >= 1000000) return `${sign}€${(v/1000000).toFixed(v>=10000000?1:2).replace(/\.00$/,'')}M`;
+    if (v >= 1000) return `${sign}€${Math.round(v/1000)}k`;
+    return `${sign}€${Math.round(v).toLocaleString()}`;
+  };
+  const clamp = (n,min,max)=>Math.max(min,Math.min(max,n));
+  const rand = (min,max)=>Math.random()*(max-min)+min;
+  const rint = (min,max)=>Math.floor(rand(min,max+1));
+  const choice = a=>a[Math.floor(Math.random()*a.length)];
+  const uid = p=>`${p}_${Date.now().toString(36)}_${Math.random().toString(36).slice(2,8)}`;
+  const roundTo = (n,step)=>Math.round(n/step)*step;
+  const esc = s=>String(s ?? '').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
+
+  let state = loadState();
+  let currentPage = 'dashboard';
+  let squadSort = 'overall';
+  let modal = null;
+
+  function baseClubs(){
+    return [
+      ['galaxy','Galaxy FC',69,55,68,68,2.4],
+      ['northbridge','Northbridge United',75,67,74,75,2.8],
+      ['kingsport','Kingsport FC',72,62,71,72,2.5],
+      ['riverside','Riverside Athletic',67,52,65,67,2.3],
+      ['ironvale','Ironvale City',73,64,72,73,2.6],
+      ['redhaven','Redhaven FC',66,50,64,66,2.2],
+      ['eastborough','Eastborough',68,54,66,68,2.4],
+      ['westford','Westford Rovers',64,47,62,64,2.1],
+      ['crownfield','Crownfield FC',70,58,69,70,2.5],
+      ['highland','Highland Athletic',65,49,63,65,2.2]
+    ].map(x=>({id:x[0],name:x[1],strength:x[2],reputation:x[3],managerQuality:x[4],squadQuality:x[5],homeAdvantage:x[6],form:[],p:0,w:0,d:0,l:0,gf:0,ga:0,pts:0}));
+  }
+
+  const firstNames=['Marco','James','Oliver','Ethan','Noah','Lucas','Mateo','Leon','Daniel','Adam','Tomas','Milan','Jonas','Nico','Oscar','Felix','Andre','Liam','Sam','Dylan','Theo','Ivan','Marek','Leo','Victor','Julian','Max','Ruben','Hugo','Alex'];
+  const lastNames=['Silva','Walker','Bennett','Cole','Kovac','Mendes','Rossi','Keller','Novak','Martin','Brooks','Santos','Meyer','Nielsen','Petrov','Davis','Costa','Turner','Vega','Hansen','Miller','Bauer','Ilic','Reed','Moreno','Lind','Fischer','Murray'];
+  const personalities=['Professional','Ambitious','Loyal','Calm','Temperamental'];
+  const styles={GK:['Shot Stopper','Sweeper Keeper'],DEF:['Ball-Playing Defender','No-Nonsense Defender','Overlapping Defender'],MID:['Playmaker','Box-to-Box','Ball Winner','Creative Midfielder'],ATT:['Clinical Finisher','Target Forward','Pressing Forward','Poacher']};
+
+  function makePlayer(name,position,age,overall,value,wage,contract,personality,style){
+    return {id:uid('p'),name,position,age,overall,value,wage,contract,personality,style,apps:0,goals:0,assists:0,ratingSum:0,fitness:rint(84,100),sharpness:rint(72,94),morale:rint(72,92),injuredWeeks:0,recent:[]};
+  }
+
+  function initialPlayers(){
+    return [
+      makePlayer('Marco Silva','ATT',27,74,1500000,12500,2,'Ambitious','Clinical Finisher'),
+      makePlayer('James Walker','ATT',25,71,1150000,7200,3,'Professional','Pressing Forward'),
+      makePlayer('Leo Novak','ATT',21,66,650000,3200,3,'Professional','Poacher'),
+      makePlayer('Mateo Rossi','MID',28,72,1250000,7200,2,'Calm','Playmaker'),
+      makePlayer('Tomas Keller','MID',24,69,900000,5200,3,'Professional','Box-to-Box'),
+      makePlayer('Jonas Martin','MID',22,68,800000,4800,2,'Ambitious','Creative Midfielder'),
+      makePlayer('Adam Brooks','MID',30,67,500000,5000,1,'Loyal','Ball Winner'),
+      makePlayer('Milan Santos','MID',19,62,420000,2200,4,'Professional','Creative Midfielder'),
+      makePlayer('Oliver Meyer','DEF',27,71,1000000,5800,3,'Professional','Ball-Playing Defender'),
+      makePlayer('Ethan Nielsen','DEF',29,70,820000,5600,2,'Calm','No-Nonsense Defender'),
+      makePlayer('Noah Petrov','DEF',23,68,760000,4700,3,'Ambitious','Overlapping Defender'),
+      makePlayer('Lucas Davis','DEF',25,67,690000,4300,2,'Loyal','Ball-Playing Defender'),
+      makePlayer('Andre Costa','DEF',31,65,330000,4000,1,'Temperamental','No-Nonsense Defender'),
+      makePlayer('Liam Turner','DEF',20,63,450000,2600,3,'Professional','Overlapping Defender'),
+      makePlayer('Nico Vega','GK',28,70,800000,5200,3,'Calm','Shot Stopper'),
+      makePlayer('Felix Hansen','GK',22,64,420000,3000,2,'Professional','Sweeper Keeper'),
+      makePlayer('Sam Miller','MID',26,65,520000,3400,2,'Loyal','Box-to-Box'),
+      makePlayer('Dylan Bauer','DEF',24,64,480000,3200,2,'Professional','Ball-Playing Defender'),
+      makePlayer('Oscar Ilic','ATT',29,65,430000,3800,1,'Temperamental','Target Forward'),
+      makePlayer('Theo Reed','MID',18,60,300000,1800,4,'Professional','Playmaker')
+    ];
+  }
+
+  function initialManager(){
+    return {name:'Daniel Foster',age:44,rating:68,philosophy:'Balanced',salary:14500,contractYears:2,reputation:61,coaching:69,motivation:70,tactical:68,youth:64,discipline:67,satisfaction:72,temporary:false};
+  }
+
+  function emptyFinances(){return {revenue:0,expenses:0,ticketIncome:0,sponsorship:0,transferIncome:0,transferExpenses:0,facilityExpenses:0,wages:0,managerWages:0,matchdayIncome:0,prizeMoney:0};}
+
+  function newGame(){
+    const s={version:1,season:1,week:0,clubs:baseClubs(),players:initialPlayers(),manager:initialManager(),managerCandidates:[],reputation:55,balance:4500000,transferBudget:1250000,wageBudget:110000,ticketPrice:24,stadium:{name:'Andromeda Stadium',capacity:12000,lastAttendance:0,attendanceTotal:0,homeGames:0},facilities:{training:2,youth:2},fixtures:[],inbox:[],news:[],history:[],transfers:{sales:[],purchases:[]},seasonFinances:emptyFinances(),seasonEnd:null,lastMatch:null,sponsor:{baseWeekly:42000,winBonus:0,name:'Asterion Mobile'},supporterMood:65,biggestSale:0,recordBalance:4500000,unreadSummary:null};
+    s.fixtures=generateFixtures(s.clubs.map(c=>c.id));
+    seedInitialInbox(s);
+    addNews(s,'You have taken control of Galaxy FC. The first owner decisions are waiting.');
+    return s;
+  }
+
+  function seedInitialInbox(s){
+    const marco=s.players.find(p=>p.name==='Marco Silva');
+    s.inbox.push({id:uid('ev'),type:'transfer_offer',category:'transfer',title:'Northbridge United bid for Marco Silva',createdWeek:0,expiresWeek:2,resolved:false,body:'Northbridge United have submitted a €1.65M offer for one of your key forwards.',quote:'Daniel Foster: “Marco is one of our best attacking players. Selling him now would weaken the first team.”',meta:{playerId:marco.id,buyer:'Northbridge United',offer:1650000}});
+    const victor=makePlayer('Victor Mendes','MID',23,71,1100000,9500,3,'Ambitious','Creative Midfielder');
+    s.inbox.push({id:uid('ev'),type:'signing_request',category:'transfer',title:'Manager requests Victor Mendes',createdWeek:0,expiresWeek:2,resolved:false,body:'Daniel Foster wants the board to approve the signing of creative midfielder Victor Mendes for €1.20M.',quote:'Daniel Foster: “We need more creativity in midfield. Mendes would improve the squad immediately.”',meta:{player:victor,fee:1200000}});
+  }
+
+  function saveState(){localStorage.setItem(STORAGE_KEY,JSON.stringify(state));}
+  function loadState(){
+    try{const raw=localStorage.getItem(STORAGE_KEY);return raw?JSON.parse(raw):null;}catch(e){console.warn(e);return null;}
+  }
+  function resetGame(){localStorage.removeItem(STORAGE_KEY);state=null;modal=null;currentPage='dashboard';render();}
+
+  function generateFixtures(teamIds){
+    const teams=[...teamIds];
+    const n=teams.length;
+    const fixed=teams[0],rot=teams.slice(1);
+    const first=[];
+    for(let round=0;round<n-1;round++){
+      const arr=[fixed,...rot];
+      const games=[];
+      for(let i=0;i<n/2;i++){
+        let a=arr[i],b=arr[n-1-i];
+        if(round%2===0 && i===0) [a,b]=[b,a];
+        else if((round+i)%2===1) [a,b]=[b,a];
+        games.push({id:uid('fx'),week:round+1,home:a,away:b,played:false,scoreHome:null,scoreAway:null,stats:null,events:[]});
+      }
+      first.push(...games);
+      rot.unshift(rot.pop());
+    }
+    const second=first.map(f=>({id:uid('fx'),week:f.week+(n-1),home:f.away,away:f.home,played:false,scoreHome:null,scoreAway:null,stats:null,events:[]}));
+    return [...first,...second].sort((a,b)=>a.week-b.week);
+  }
+
+  function club(id){return state.clubs.find(c=>c.id===id);}
+  function galaxy(){return club(GALAXY_ID);}
+  function seasonLabel(){const y=START_YEAR+state.season-1;return `${y}/${String((y+1)%100).padStart(2,'0')}`;}
+  function wageBill(){return state.players.reduce((a,p)=>a+p.wage,0);}
+  function pendingInbox(){return state.inbox.filter(x=>!x.resolved && (x.expiresWeek==null || x.expiresWeek>=state.week));}
+  function leagueSorted(){return [...state.clubs].sort((a,b)=>b.pts-a.pts || (b.gf-b.ga)-(a.gf-a.ga) || b.gf-a.gf || b.reputation-a.reputation);}
+  function leaguePosition(id=GALAXY_ID){return leagueSorted().findIndex(c=>c.id===id)+1;}
+  function ordinal(n){const s=['th','st','nd','rd'],v=n%100;return n+(s[(v-20)%10]||s[v]||s[0]);}
+  function addNews(s,text){s.news.unshift({text,season:s.season,week:s.week});s.news=s.news.slice(0,30);}
+
+  function effectivePlayer(p){
+    const fitnessFactor=0.80+0.20*(p.fitness/100);
+    const sharpFactor=0.92+0.08*(p.sharpness/100);
+    const moraleFactor=0.93+0.07*(p.morale/100);
+    const injury=p.injuredWeeks>0?0.2:1;
+    return p.overall*fitnessFactor*sharpFactor*moraleFactor*injury;
+  }
+  function playerStatus(p){
+    if(p.injuredWeeks>0)return ['Injured','bad'];
+    if(p.morale<50)return ['Unhappy','bad'];
+    if(p.fitness<66)return ['Tired','warn'];
+    if(p.sharpness<58)return ['Low sharpness','warn'];
+    if(p.fitness>90&&p.morale>75)return ['Excellent','good'];
+    return ['Good','good'];
+  }
+
+  function chooseGalaxyLineup(){
+    const formation={GK:1,DEF:4,MID:4,ATT:2};
+    const selected=[];
+    for(const pos of Object.keys(formation)){
+      const pool=state.players.filter(p=>p.position===pos && p.injuredWeeks===0).sort((a,b)=>effectivePlayer(b)-effectivePlayer(a));
+      selected.push(...pool.slice(0,formation[pos]));
+    }
+    while(selected.length<11){
+      const extra=state.players.filter(p=>p.injuredWeeks===0 && !selected.includes(p)).sort((a,b)=>effectivePlayer(b)-effectivePlayer(a))[0];
+      if(!extra)break; selected.push(extra);
+    }
+    return selected;
+  }
+
+  function recentFormMod(c){
+    if(!c.form.length)return 0;
+    const pts=c.form.slice(-5).reduce((a,r)=>a+(r==='W'?3:r==='D'?1:0),0);
+    return (pts-7)*0.28;
+  }
+  function teamStrength(id,lineup=null){
+    const c=club(id);
+    if(id===GALAXY_ID){
+      const l=lineup||chooseGalaxyLineup();
+      const avg=l.reduce((a,p)=>a+effectivePlayer(p),0)/Math.max(1,l.length);
+      const managerRating=state.manager?.rating||55;
+      const fitBonus=state.manager?.philosophy==='Balanced'?0.8:state.manager?.philosophy==='Youth-focused'&&l.some(p=>p.age<22)?1.1:0.3;
+      return avg+(managerRating-60)*0.10+fitBonus+recentFormMod(c);
+    }
+    return c.squadQuality*0.82+c.managerQuality*0.18+recentFormMod(c)+rand(-0.5,0.5);
+  }
+  function poisson(lambda){
+    const L=Math.exp(-lambda);let k=0,p=1;
+    do{k++;p*=Math.random();}while(p>L&&k<12);
+    return k-1;
+  }
+  function simulateScore(homeId,awayId,homeLineup=null,awayLineup=null){
+    const h=teamStrength(homeId,homeLineup)+(club(homeId).homeAdvantage||2.3);
+    const a=teamStrength(awayId,awayLineup);
+    const diff=h-a;
+    const homeLambda=clamp(1.35+diff*0.045,0.35,3.1);
+    const awayLambda=clamp(1.05-diff*0.040,0.3,2.8);
+    return [Math.min(poisson(homeLambda),6),Math.min(poisson(awayLambda),6),h,a];
+  }
+
+  function weightedScorer(lineup){
+    const pool=[];
+    lineup.forEach(p=>{
+      const weight=p.position==='ATT'?6:p.position==='MID'?3:p.position==='DEF'?1:0.15;
+      const n=Math.max(1,Math.round(weight*(p.overall/70)));
+      for(let i=0;i<n;i++)pool.push(p);
+    });
+    return choice(pool);
+  }
+
+  function updateTable(fx){
+    const h=club(fx.home),a=club(fx.away); h.p++;a.p++;h.gf+=fx.scoreHome;h.ga+=fx.scoreAway;a.gf+=fx.scoreAway;a.ga+=fx.scoreHome;
+    if(fx.scoreHome>fx.scoreAway){h.w++;a.l++;h.pts+=3;h.form.push('W');a.form.push('L');}
+    else if(fx.scoreHome<fx.scoreAway){a.w++;h.l++;a.pts+=3;a.form.push('W');h.form.push('L');}
+    else{h.d++;a.d++;h.pts++;a.pts++;h.form.push('D');a.form.push('D');}
+    h.form=h.form.slice(-5);a.form=a.form.slice(-5);
+  }
+
+  function simulateFixture(fx){
+    const involvesGalaxy=fx.home===GALAXY_ID||fx.away===GALAXY_ID;
+    let lineup=null;
+    if(involvesGalaxy) lineup=chooseGalaxyLineup();
+    const beforePos=leaguePosition();
+    const [gh,ga]=simulateScore(fx.home,fx.away,fx.home===GALAXY_ID?lineup:null,fx.away===GALAXY_ID?lineup:null);
+    fx.scoreHome=gh;fx.scoreAway=ga;fx.played=true;
+    const homeStrength=teamStrength(fx.home,fx.home===GALAXY_ID?lineup:null),awayStrength=teamStrength(fx.away,fx.away===GALAXY_ID?lineup:null);
+    const possession=clamp(Math.round(50+(homeStrength-awayStrength)*1.2+rand(-6,6)),34,66);
+    fx.stats={possessionHome:possession,shotsHome:clamp(Math.round(7+gh*2.2+rand(0,6)),4,22),shotsAway:clamp(Math.round(7+ga*2.2+rand(0,6)),4,22),attendance:0,beforePos};
+    fx.events=[];
+    if(involvesGalaxy){
+      lineup.forEach(p=>{p.apps++;p.sharpness=clamp(p.sharpness+rint(2,5),0,100);p.fitness=clamp(p.fitness-rint(8,16),0,100);});
+      const ourGoals=fx.home===GALAXY_ID?gh:ga;
+      for(let i=0;i<ourGoals;i++){
+        const scorer=weightedScorer(lineup);scorer.goals++;const minute=rint(4,89);fx.events.push({team:GALAXY_ID,scorer:scorer.name,minute});
+        if(Math.random()<0.58){const assist=choice(lineup.filter(p=>p.id!==scorer.id && p.position!=='GK'));if(assist)assist.assists++;}
+      }
+      const oppGoals=fx.home===GALAXY_ID?ga:gh;
+      for(let i=0;i<oppGoals;i++) fx.events.push({team:fx.home===GALAXY_ID?fx.away:fx.home,scorer:choice(firstNames)+' '+choice(lastNames),minute:rint(4,89)});
+      fx.events.sort((a,b)=>a.minute-b.minute);
+      const won=ourGoals>oppGoals,draw=ourGoals===oppGoals;
+      lineup.forEach(p=>{
+        const goalBoost=p.goals?0:0;
+        const rating=clamp(6.35+(won?0.55:draw?0.1:-0.35)+rand(-0.55,0.55)+goalBoost,4.8,8.8);
+        p.ratingSum+=rating;p.recent.push(+rating.toFixed(1));p.recent=p.recent.slice(-5);
+        p.morale=clamp(p.morale+(won?rint(2,5):draw?rint(-1,2):-rint(1,4)),25,100);
+        if(Math.random()<0.012){p.injuredWeeks=rint(1,3);}
+      });
+      state.players.filter(p=>!lineup.includes(p)).forEach(p=>{p.sharpness=clamp(p.sharpness-rint(0,2),0,100);});
+      if(fx.home===GALAXY_ID){
+        const attendance=calcAttendance(fx.away);
+        fx.stats.attendance=attendance;state.stadium.lastAttendance=attendance;state.stadium.attendanceTotal+=attendance;state.stadium.homeGames++;
+        const income=Math.round(attendance*state.ticketPrice*1.18);
+        state.balance+=income;state.seasonFinances.revenue+=income;state.seasonFinances.ticketIncome+=Math.round(attendance*state.ticketPrice);state.seasonFinances.matchdayIncome+=income;
+      }
+      state.lastMatch={fixtureId:fx.id,lineupIds:lineup.map(p=>p.id)};
+    }
+    updateTable(fx);
+    return involvesGalaxy?fx:null;
+  }
+
+  function calcAttendance(opponentId){
+    const opp=club(opponentId);const pos=leaguePosition();const g=galaxy();
+    const formPts=g.form.reduce((a,r)=>a+(r==='W'?3:r==='D'?1:0),0);
+    let demand=.72+(state.reputation-55)*.006+(11-pos)*.011+(opp.reputation-50)*.0025+(formPts-7)*.008-(state.ticketPrice-24)*.012;
+    demand+=rand(-.035,.035);demand=clamp(demand,.38,1.03);
+    return Math.round(state.stadium.capacity*demand);
+  }
+  function expectedAttendance(){
+    const next=nextGalaxyFixture();const opp=next?club(next.home===GALAXY_ID?next.away:next.home):state.clubs[1];
+    const pos=leaguePosition();const formPts=galaxy().form.reduce((a,r)=>a+(r==='W'?3:r==='D'?1:0),0);
+    let demand=.72+(state.reputation-55)*.006+(11-pos)*.011+(opp.reputation-50)*.0025+(formPts-7)*.008-(state.ticketPrice-24)*.012;
+    return Math.round(state.stadium.capacity*clamp(demand,.38,1.03));
+  }
+
+  function weeklyFinance(matchFx){
+    const playerWages=wageBill(),mgr=state.manager?.salary||5000,facility=9000+state.facilities.training*1800+state.facilities.youth*1500;
+    const cost=playerWages+mgr+facility;
+    const sponsor=state.sponsor.baseWeekly + ((matchFx && galaxyResult(matchFx)==='W')?state.sponsor.winBonus:0);
+    state.balance+=sponsor-cost;
+    state.seasonFinances.revenue+=sponsor;state.seasonFinances.sponsorship+=sponsor;
+    state.seasonFinances.expenses+=cost;state.seasonFinances.wages+=playerWages;state.seasonFinances.managerWages+=mgr;
+    state.recordBalance=Math.max(state.recordBalance||0,state.balance);
+    return {cost,sponsor};
+  }
+  function galaxyResult(fx){const ours=fx.home===GALAXY_ID?fx.scoreHome:fx.scoreAway,theirs=fx.home===GALAXY_ID?fx.scoreAway:fx.scoreHome;return ours>theirs?'W':ours===theirs?'D':'L';}
+
+  function recoverPlayers(){
+    state.players.forEach(p=>{
+      if(p.injuredWeeks>0)p.injuredWeeks--;
+      const recovery=7+state.facilities.training*1.5+rint(0,3);
+      p.fitness=clamp(p.fitness+recovery,0,100);
+      p.morale=clamp(p.morale+rint(-1,1),20,100);
+    });
+  }
+
+  function expireEvents(){
+    state.inbox.forEach(ev=>{
+      if(!ev.resolved && ev.expiresWeek!=null && ev.expiresWeek<state.week){ev.resolved=true;ev.resolution='Expired';addNews(state,`${ev.title} expired without a board decision.`);}
+    });
+  }
+
+  function randomPlayer(position=null,target=68){
+    const pos=position||choice(['GK','DEF','MID','ATT']);
+    const age=rint(18,29);const overall=clamp(Math.round(target+rand(-4,5)),56,82);const value=roundTo(Math.max(180000,(overall-55)*90000*(30-age)/10),50000);
+    const wage=roundTo(Math.max(2500,(overall-55)*620+rand(-700,900)),100);
+    return makePlayer(`${choice(firstNames)} ${choice(lastNames)}`,pos,age,overall,value,wage,rint(2,4),choice(personalities),choice(styles[pos]));
+  }
+
+  function generateEvents(){
+    const active=pendingInbox();
+    if(active.length>=5)return;
+    if(Math.random()<0.22 && state.players.length>16 && !active.some(e=>e.type==='transfer_offer')){
+      const p=choice(state.players.filter(p=>p.age>20 && p.injuredWeeks===0));
+      const offer=roundTo(p.value*rand(.9,1.35),50000);const buyer=choice(state.clubs.filter(c=>c.id!==GALAXY_ID)).name;
+      state.inbox.push({id:uid('ev'),type:'transfer_offer',category:'transfer',title:`${buyer} bid for ${p.name}`,createdWeek:state.week,expiresWeek:state.week+2,resolved:false,body:`${buyer} have offered ${fmtMoney(offer)} for ${p.name} (OVR ${p.overall}, value ${fmtMoney(p.value)}).`,quote:`${state.manager.name}: “${p.overall>=70?'He is an important first-team player.':'The offer is worth considering if it supports our wider plan.'}”`,meta:{playerId:p.id,buyer,offer}});
+      addNews(state,`${buyer} submit a bid for ${p.name}.`);
+    }
+    if(Math.random()<0.17 && !active.some(e=>e.type==='signing_request')){
+      const need=weakestPosition();const target=randomPlayer(need,Math.round(squadAverage()+rand(0,4)));const fee=roundTo(target.value*rand(1.02,1.22),50000);
+      state.inbox.push({id:uid('ev'),type:'signing_request',category:'transfer',title:`Manager recommends ${target.name}`,createdWeek:state.week,expiresWeek:state.week+2,resolved:false,body:`The recruitment team proposes ${target.name}, ${target.age}, ${target.position}, OVR ${target.overall}. Fee ${fmtMoney(fee)}, wage ${fmtMoney(target.wage)}/week.`,quote:`${state.manager.name}: “This signing would add useful quality in ${need === 'ATT'?'attack':need === 'MID'?'midfield':need === 'DEF'?'defence':'goal'}.”`,meta:{player:target,fee}});
+    }
+    const expiring=state.players.filter(p=>p.contract<=1 && !active.some(e=>e.type==='contract'&&e.meta.playerId===p.id));
+    if(expiring.length && Math.random()<0.38){
+      const p=choice(expiring);const wage=roundTo(p.wage*rand(1.08,1.30),100);const years=p.age>=30?1:rint(2,3);
+      state.inbox.push({id:uid('ev'),type:'contract',category:'contract',title:`Contract decision: ${p.name}`,createdWeek:state.week,expiresWeek:state.week+3,resolved:false,body:`${p.name}'s contract expires at the end of the season. Current wage ${fmtMoney(p.wage)}/week. Requested: ${fmtMoney(wage)}/week for ${years} year${years>1?'s':''}.`,quote:`Agent: “${p.name} wants clarity about his future.”`,meta:{playerId:p.id,wage,years}});
+    }
+    if(Math.random()<0.07 && !active.some(e=>e.type==='sponsor')){
+      const fixed=roundTo(500000+state.reputation*2500,10000),base=roundTo(260000+state.reputation*1300,10000),bonus=50000;
+      state.inbox.push({id:uid('ev'),type:'sponsor',category:'info',title:'New sponsorship structure',createdWeek:state.week,expiresWeek:state.week+2,resolved:false,body:`Choose between a guaranteed ${fmtMoney(fixed)} package spread over the remaining season, or ${fmtMoney(base)} plus ${fmtMoney(bonus)} per league win.`,meta:{fixed,base,bonus}});
+    }
+    if(Math.random()<0.06 && !active.some(e=>e.type==='budget_request')){
+      state.inbox.push({id:uid('ev'),type:'budget_request',category:'alert',title:'Manager asks for more transfer budget',createdWeek:state.week,expiresWeek:state.week+2,resolved:false,body:`${state.manager.name} wants an additional €500k added to the transfer budget.`,quote:`${state.manager.name}: “A little more room would help us act when the right opportunity appears.”`,meta:{amount:500000}});
+    }
+  }
+
+  function weakestPosition(){
+    return ['GK','DEF','MID','ATT'].map(pos=>{const a=state.players.filter(p=>p.position===pos).map(p=>p.overall);return {pos,avg:a.reduce((x,y)=>x+y,0)/Math.max(1,a.length)}}).sort((a,b)=>a.avg-b.avg)[0].pos;
+  }
+  function squadAverage(){return state.players.reduce((a,p)=>a+p.overall,0)/Math.max(1,state.players.length);}
+
+  function nextGalaxyFixture(){return state.fixtures.find(f=>!f.played&&(f.home===GALAXY_ID||f.away===GALAXY_ID));}
+  function previousGalaxyFixture(){return [...state.fixtures].reverse().find(f=>f.played&&(f.home===GALAXY_ID||f.away===GALAXY_ID));}
+
+  function nextWeek(){
+    if(state.seasonEnd){modal={type:'seasonEnd'};render();return;}
+    if(state.week>=18){finishSeason();render();return;}
+    const unresolved=pendingInbox().length;
+    if(unresolved>0 && !window.confirm(`You still have ${unresolved} unresolved owner decision${unresolved===1?'':'s'}. Continue anyway?`))return;
+    const before=leaguePosition();
+    recoverPlayers();
+    const targetWeek=state.week+1;let galaxyFx=null;
+    state.fixtures.filter(f=>f.week===targetWeek&&!f.played).forEach(f=>{const x=simulateFixture(f);if(x)galaxyFx=x;});
+    state.week=targetWeek;
+    const finance=weeklyFinance(galaxyFx);
+    expireEvents();generateEvents();
+    const after=leaguePosition();
+    if(galaxyFx){
+      const result=galaxyResult(galaxyFx);const opp=club(galaxyFx.home===GALAXY_ID?galaxyFx.away:galaxyFx.home).name;
+      const gf=galaxyFx.home===GALAXY_ID?galaxyFx.scoreHome:galaxyFx.scoreAway,ga=galaxyFx.home===GALAXY_ID?galaxyFx.scoreAway:galaxyFx.scoreHome;
+      addNews(state,`Galaxy FC ${result==='W'?'beat':result==='D'?'draw with':'lose to'} ${opp}, ${gf}–${ga}.`);
+      if(result==='W')state.supporterMood=clamp(state.supporterMood+3,0,100);else if(result==='L')state.supporterMood=clamp(state.supporterMood-2,0,100);
+    }
+    if(state.balance<500000 && !pendingInbox().some(e=>e.type==='financial_pressure')){
+      state.inbox.push({id:uid('ev'),type:'financial_pressure',category:'alert',title:'Financial pressure',createdWeek:state.week,expiresWeek:null,resolved:false,body:`Galaxy FC's cash reserves are becoming dangerously low at ${fmtMoney(state.balance)}. Expensive actions are now restricted.`,meta:{}});
+    }
+    state.unreadSummary={week:state.week,fixtureId:galaxyFx?.id,before,after,finance};
+    if(state.week===18)finishSeason();
+    saveState();
+    modal=state.seasonEnd?{type:'seasonEnd'}:{type:'weekSummary',data:state.unreadSummary};
+    render();
+  }
+
+  function finishSeason(){
+    if(state.seasonEnd)return;
+    const pos=leaguePosition();const g=galaxy();const prizes=[2000000,1600000,1300000,1050000,850000,700000,580000,470000,380000,300000];const prize=prizes[pos-1];
+    state.balance+=prize;state.seasonFinances.revenue+=prize;state.seasonFinances.prizeMoney+=prize;
+    const oldRep=state.reputation;const delta=[6,4,3,2,1,0,-1,-2,-3,-4][pos-1]+(state.balance>5000000?1:state.balance<0?-1:0);state.reputation=clamp(state.reputation+delta,1,100);g.reputation=state.reputation;
+    const top=[...state.players].sort((a,b)=>b.goals-a.goals)[0];const best=[...state.players].sort((a,b)=>(b.apps?b.ratingSum/b.apps:0)-(a.apps?a.ratingSum/a.apps:0))[0];
+    const avgAtt=state.stadium.homeGames?Math.round(state.stadium.attendanceTotal/state.stadium.homeGames):0;
+    const profit=state.seasonFinances.revenue-state.seasonFinances.expenses;
+    const record={season:seasonLabel(),position:pos,points:g.pts,topScorer:top?`${top.name} (${top.goals})`:'—',balance:state.balance,goals:top?.goals||0};state.history.push(record);
+    state.seasonEnd={seasonLabel:seasonLabel(),position:pos,stats:{p:g.p,w:g.w,d:g.d,l:g.l,gf:g.gf,ga:g.ga,pts:g.pts},topScorer:top?.name||'—',topGoals:top?.goals||0,bestPlayer:best?.name||'—',balance:state.balance,profit,avgAttendance:avgAtt,oldRep,newRep:state.reputation,prize};
+    addNews(state,`Season ${seasonLabel()} complete: Galaxy FC finish ${ordinal(pos)}.`);
+    saveState();
+  }
+
+  function startNextSeason(){
+    if(!state.seasonEnd)return;
+    const training=state.facilities.training;
+    state.players.forEach(p=>{
+      p.age++;
+      let delta=0;
+      if(p.age<=21)delta=rint(-1,4);else if(p.age<=26)delta=rint(-1,2);else if(p.age<=30)delta=rint(-1,1);else delta=rint(-3,0);
+      if(p.personality==='Professional'&&Math.random()<.35)delta++;
+      if(training>=4&&p.age<=26&&Math.random()<.3)delta++;
+      p.overall=clamp(p.overall+delta,45,90);p.value=Math.max(80000,roundTo(p.value*(1+delta*.08)*(p.age>30?.9:1.02),50000));p.contract--;p.apps=0;p.goals=0;p.assists=0;p.ratingSum=0;p.recent=[];p.fitness=rint(86,100);p.sharpness=rint(68,88);p.morale=clamp(p.morale+rint(-6,6),45,95);p.injuredWeeks=0;
+    });
+    const leaving=state.players.filter(p=>p.contract<=0);leaving.forEach(p=>addNews(state,`${p.name} leaves Galaxy FC after his contract expires.`));state.players=state.players.filter(p=>p.contract>0);
+    if(state.manager && !state.manager.temporary){state.manager.contractYears--;if(state.manager.contractYears<=0){addNews(state,`${state.manager.name}'s contract ends. Interim staff take charge while the board considers candidates.`);state.manager={name:'Interim Staff',age:48,rating:55,philosophy:'Balanced',salary:5000,contractYears:0,reputation:45,coaching:55,motivation:56,tactical:54,youth:55,discipline:60,satisfaction:60,temporary:true};state.managerCandidates=generateManagerCandidates();}}
+    state.clubs.forEach(c=>{c.p=c.w=c.d=c.l=c.gf=c.ga=c.pts=0;c.form=[];if(c.id!==GALAXY_ID){c.squadQuality=clamp(c.squadQuality+rint(-2,2),58,82);c.managerQuality=clamp(c.managerQuality+rint(-2,2),55,82);c.reputation=clamp(c.reputation+rint(-1,1),40,80);}});
+    state.season++;state.week=0;state.fixtures=generateFixtures(state.clubs.map(c=>c.id));state.seasonFinances=emptyFinances();state.seasonEnd=null;state.lastMatch=null;state.stadium.lastAttendance=0;state.stadium.attendanceTotal=0;state.stadium.homeGames=0;state.transferBudget=roundTo(clamp(state.balance*.22+(state.reputation-50)*25000,500000,4000000),50000);state.sponsor.baseWeekly=roundTo(32000+state.reputation*240,1000);state.sponsor.winBonus=0;
+    if(Math.random()<.38+state.facilities.youth*.1){
+      const quality=55+state.facilities.youth*2+rint(-2,5);const prospect=randomPlayer(choice(['DEF','MID','ATT']),quality);prospect.age=18;prospect.wage=roundTo(rand(1800,3200),100);prospect.contract=3;prospect.value=roundTo(Math.max(180000,(prospect.overall-50)*45000),50000);
+      state.inbox.push({id:uid('ev'),type:'youth',category:'info',title:`Academy graduate: ${prospect.name}`,createdWeek:0,expiresWeek:2,resolved:false,body:`Your academy staff recommend ${prospect.name}, 18, ${prospect.position}, OVR ${prospect.overall}. Scout assessment: “${prospect.overall>=65?'One of the better prospects we have produced.':'A raw player with room to develop.'}”`,meta:{player:prospect}});
+    }
+    addNews(state,`Season ${seasonLabel()} begins. A new 18-match schedule has been created.`);saveState();modal=null;currentPage='dashboard';render();
+  }
+
+  function resolveEvent(id,action){
+    const ev=state.inbox.find(e=>e.id===id);if(!ev||ev.resolved)return;
+    if(ev.type==='transfer_offer'){
+      const p=state.players.find(p=>p.id===ev.meta.playerId);if(!p){ev.resolved=true;ev.resolution='Player no longer at club';}
+      else if(action==='accept'){
+        state.balance+=ev.meta.offer;state.transferBudget+=Math.round(ev.meta.offer*.55);state.seasonFinances.revenue+=ev.meta.offer;state.seasonFinances.transferIncome+=ev.meta.offer;state.players=state.players.filter(x=>x.id!==p.id);state.transfers.sales.unshift({season:seasonLabel(),player:p.name,club:ev.meta.buyer,fee:ev.meta.offer});state.biggestSale=Math.max(state.biggestSale||0,ev.meta.offer);state.manager.satisfaction=clamp(state.manager.satisfaction-4,0,100);ev.resolution=`Accepted ${fmtMoney(ev.meta.offer)}`;addNews(state,`${p.name} joins ${ev.meta.buyer} for ${fmtMoney(ev.meta.offer)}.`);
+      }else{ev.resolution='Offer rejected';state.manager.satisfaction=clamp(state.manager.satisfaction+1,0,100);addNews(state,`Galaxy FC reject the bid for ${p.name}.`);}
+    }else if(ev.type==='signing_request'){
+      const p=ev.meta.player,fee=ev.meta.fee;const can=state.balance>=fee&&state.transferBudget>=fee&&wageBill()+p.wage<=state.wageBudget;
+      if(action==='approve'&&can){state.balance-=fee;state.transferBudget-=fee;state.seasonFinances.expenses+=fee;state.seasonFinances.transferExpenses+=fee;state.players.push(p);state.transfers.purchases.unshift({season:seasonLabel(),player:p.name,club:'Recruitment target',fee});state.manager.satisfaction=clamp(state.manager.satisfaction+4,0,100);ev.resolution=`Signed for ${fmtMoney(fee)}`;addNews(state,`${p.name} signs for Galaxy FC for ${fmtMoney(fee)}.`);}
+      else if(action==='approve'&&!can){toast('The club cannot afford this transfer within cash, transfer budget and wage limits.');return;}
+      else{ev.resolution='Signing declined';state.manager.satisfaction=clamp(state.manager.satisfaction-2,0,100);}
+    }else if(ev.type==='contract'){
+      const p=state.players.find(p=>p.id===ev.meta.playerId);if(!p){ev.resolution='Player unavailable';}
+      else if(action==='offer'){
+        if(wageBill()-p.wage+ev.meta.wage>state.wageBudget){toast('This contract would exceed the weekly wage budget.');return;}
+        p.wage=ev.meta.wage;p.contract=ev.meta.years;p.morale=clamp(p.morale+8,0,100);ev.resolution='New contract agreed';addNews(state,`${p.name} signs a new ${ev.meta.years}-year contract.`);
+      }else{ev.resolution='Contract offer declined';p.morale=clamp(p.morale-8,0,100);}
+    }else if(ev.type==='sponsor'){
+      const weeksLeft=Math.max(1,18-state.week);
+      if(action==='fixed'){state.sponsor.baseWeekly=Math.round(ev.meta.fixed/weeksLeft);state.sponsor.winBonus=0;ev.resolution='Guaranteed package selected';}
+      else{state.sponsor.baseWeekly=Math.round(ev.meta.base/weeksLeft);state.sponsor.winBonus=ev.meta.bonus;ev.resolution='Performance package selected';}
+      addNews(state,`Galaxy FC agree a new sponsorship structure.`);
+    }else if(ev.type==='budget_request'){
+      if(action==='approve'){state.transferBudget+=ev.meta.amount;state.manager.satisfaction=clamp(state.manager.satisfaction+4,0,100);ev.resolution='Budget increased';}
+      else{state.manager.satisfaction=clamp(state.manager.satisfaction-3,0,100);ev.resolution='Request rejected';}
+    }else if(ev.type==='financial_pressure'){ev.resolution='Acknowledged';}
+    else if(ev.type==='youth'){
+      if(action==='promote'){state.players.push(ev.meta.player);ev.resolution='Promoted to first team';addNews(state,`${ev.meta.player.name} joins the Galaxy FC first-team squad.`);}else ev.resolution='Released';
+    }
+    ev.resolved=true;saveState();render();
+  }
+
+  function generateManagerCandidates(){
+    const philosophies=['Attacking','Balanced','Defensive','Possession','Direct','Youth-focused'];
+    return Array.from({length:3},(_,i)=>{
+      const rating=clamp(Math.round(state.reputation*.28+50+rand(-5,7)+i*1.2),58,81);const salary=roundTo(7000+(rating-55)*650+rand(-1000,1700),500);
+      return {id:uid('mgr'),name:`${choice(['Alex','Julian','Martin','Sergio','Leon','Adrian','Nicolas','Thomas'])} ${choice(['Moreno','Keller','Varga','Costa','Murray','Rossi','Lind','Hoffmann'])}`,age:rint(38,58),rating,philosophy:choice(philosophies),salary,contractYears:rint(2,3),reputation:clamp(rating+rint(-6,5),50,85),coaching:clamp(rating+rint(-5,5),45,90),motivation:clamp(rating+rint(-7,7),45,90),tactical:clamp(rating+rint(-5,6),45,90),youth:clamp(rating+rint(-9,8),40,90),discipline:clamp(rating+rint(-8,8),40,90),satisfaction:70,temporary:false};
+    });
+  }
+
+  function fireManager(){
+    if(state.manager.temporary){toast('The club is already under interim management.');return;}
+    const comp=Math.round(state.manager.salary*52*Math.max(1,state.manager.contractYears)*.35);
+    if(state.balance<comp){toast(`Firing compensation is ${fmtMoney(comp)}, which the club cannot currently afford.`);return;}
+    if(!confirm(`Fire ${state.manager.name}? Compensation will cost approximately ${fmtMoney(comp)}.`))return;
+    const old=state.manager.name;state.balance-=comp;state.seasonFinances.expenses+=comp;state.manager={name:'Interim Staff',age:48,rating:55,philosophy:'Balanced',salary:5000,contractYears:0,reputation:45,coaching:55,motivation:56,tactical:54,youth:55,discipline:60,satisfaction:60,temporary:true};state.managerCandidates=generateManagerCandidates();addNews(state,`${old} leaves Galaxy FC. The board begins a manager search.`);saveState();render();
+  }
+  function hireManager(id){
+    const m=state.managerCandidates.find(x=>x.id===id);if(!m)return;
+    state.manager=m;state.managerCandidates=[];addNews(state,`${m.name} appointed Galaxy FC manager on a ${m.contractYears}-year contract.`);saveState();render();
+  }
+
+  function upgradeStadium(){
+    const next=state.stadium.capacity===12000?{cap:15000,cost:2000000}:state.stadium.capacity===15000?{cap:20000,cost:4000000}:null;
+    if(!next){toast('Andromeda Stadium is already at the MVP maximum capacity.');return;}
+    if(state.balance<next.cost){toast(`You need ${fmtMoney(next.cost)} in cash for this expansion.`);return;}
+    if(!confirm(`Expand Andromeda Stadium to ${next.cap.toLocaleString()} seats for ${fmtMoney(next.cost)}?`))return;
+    state.balance-=next.cost;state.seasonFinances.expenses+=next.cost;state.seasonFinances.facilityExpenses+=next.cost;state.stadium.capacity=next.cap;addNews(state,`Galaxy FC announce expansion of Andromeda Stadium to ${next.cap.toLocaleString()} seats.`);saveState();render();
+  }
+  function facilityCost(type){const lvl=state.facilities[type];const base=type==='training'?500000:400000;return Math.round(base*Math.pow(1.55,lvl-1));}
+  function upgradeFacility(type){
+    if(state.facilities[type]>=5){toast('This facility is already level 5.');return;}const cost=facilityCost(type);if(state.balance<cost){toast(`You need ${fmtMoney(cost)} in cash for this upgrade.`);return;}
+    if(!confirm(`Upgrade ${type==='training'?'Training Centre':'Youth Academy'} to Level ${state.facilities[type]+1} for ${fmtMoney(cost)}?`))return;
+    state.balance-=cost;state.seasonFinances.expenses+=cost;state.seasonFinances.facilityExpenses+=cost;state.facilities[type]++;addNews(state,`${type==='training'?'Training Centre':'Youth Academy'} upgraded to Level ${state.facilities[type]}.`);saveState();render();
+  }
+
+  function setTicketPrice(v){state.ticketPrice=+v;saveState();renderPageOnly();}
+
+  function render(){
+    const root=document.getElementById('root');
+    if(!state){root.innerHTML=renderIntro();bindIntro();return;}
+    root.innerHTML=renderShell();bindCommon();bindPage();if(modal)renderModal();
+  }
+  function renderPageOnly(){
+    const el=document.getElementById('pageContent');if(el)el.innerHTML=renderPage();bindPage();const b=document.querySelector('.inbox-badge');if(b)b.textContent=pendingInbox().length;
+  }
+  function renderIntro(){return `<div class="intro"><div class="intro-card"><div class="crest"></div><div class="eyebrow">Browser football ownership simulation</div><h1>FOOTBALL CLUB OWNER</h1><h2>You own the club. The manager runs the team. Every decision has consequences.</h2><p>Take control of Galaxy FC. Hire managers, approve transfers, negotiate contracts, manage finances and build the club for the future — without ever picking a formation or starting XI.</p><button id="startGame" class="btn primary">TAKE CONTROL OF GALAXY FC</button></div></div>`;}
+  function bindIntro(){document.getElementById('startGame').onclick=()=>{state=newGame();saveState();render();};}
+
+  function renderShell(){
+    const pages=[['dashboard','Dashboard'],['inbox','Owner Inbox'],['squad','Squad'],['manager','Manager'],['fixtures','Fixtures'],['league','League'],['transfers','Transfers'],['finances','Finances'],['stadium','Stadium & Facilities'],['history','Club History']];
+    return `<div class="mobile-overlay" id="mobileOverlay"></div><div class="app-shell"><aside class="sidebar" id="sidebar"><div class="brand"><div class="crest"></div><div><h1>GALAXY FC</h1><small>FOOTBALL CLUB OWNER</small></div></div><nav class="nav">${pages.map(([id,label])=>`<button data-page="${id}" class="${currentPage===id?'active':''}"><span>${label}</span>${id==='inbox'?`<span class="badge hot inbox-badge">${pendingInbox().length}</span>`:''}</button>`).join('')}</nav><div class="sidebar-bottom"><nav class="nav"><button data-page="settings" class="${currentPage==='settings'?'active':''}"><span>Settings</span><span class="muted">⚙</span></button></nav></div></aside><main class="main"><header class="topbar"><div class="top-title"><button class="btn ghost mobile-menu" id="menuBtn">☰</button><div><h2>Galaxy FC</h2><span>Season ${state.season} · ${seasonLabel()} · Week ${state.week} / 18</span></div></div><div class="top-actions"><span class="meta-hide muted" style="font-size:12px">${fmtMoney(state.balance)} cash</span><button class="btn primary next-week" id="nextWeekBtn" ${state.seasonEnd?'':' '}>${state.seasonEnd?'SEASON REVIEW':'NEXT WEEK →'}</button></div></header><section class="page" id="pageContent">${renderPage()}</section></main></div>`;
+  }
+
+  function renderPage(){
+    switch(currentPage){case'dashboard':return dashboardPage();case'inbox':return inboxPage();case'squad':return squadPage();case'manager':return managerPage();case'fixtures':return fixturesPage();case'league':return leaguePage();case'transfers':return transfersPage();case'finances':return financesPage();case'stadium':return stadiumPage();case'history':return historyPage();case'settings':return settingsPage();default:return dashboardPage();}
+  }
+  function renderPageHeader(title,desc,extra=''){return `<div class="page-head"><div><h2>${title}</h2><p>${desc}</p></div>${extra}</div>`;}
+
+  function dashboardPage(){
+    const pos=leaguePosition(),next=nextGalaxyFixture(),prev=previousGalaxyFixture(),form=galaxy().form.slice(-5),avgAtt=state.stadium.homeGames?Math.round(state.stadium.attendanceTotal/state.stadium.homeGames):0;
+    const top5=leagueSorted().slice(0,5);
+    return `${state.seasonEnd?`<div class="season-banner"><strong>Season complete.</strong> Galaxy FC finished ${ordinal(state.seasonEnd.position)}. Open the season review to continue.</div>`:''}
+      <div class="card hero"><div class="club-lockup"><div class="crest"></div><div><div class="eyebrow">Owner dashboard</div><h1>GALAXY FC</h1><p>Season ${state.season} · ${seasonLabel()} · Week ${state.week} / 18</p></div></div></div>
+      <div class="grid kpis" style="margin-top:16px"><div class="card kpi"><div class="label">League position</div><div class="value">${state.week?ordinal(pos):'—'}</div><div class="hint">${state.week?`${galaxy().pts} pts after ${galaxy().p} matches`:'Season not started'}</div></div><div class="card kpi"><div class="label">Cash balance</div><div class="value">${fmtMoney(state.balance)}</div><div class="hint">Transfer budget ${fmtMoney(state.transferBudget)}</div></div><div class="card kpi"><div class="label"><span class="tooltip" title="Influences sponsorship, attendance and the quality of players and managers interested in the club.">Club reputation</span></div><div class="value">${state.reputation}<span style="font-size:14px;color:var(--muted)"> / 100</span></div><div class="hint">Supporter mood ${state.supporterMood}/100</div></div><div class="card kpi"><div class="label">Manager status</div><div class="value" style="font-size:22px">${managerStatus()}</div><div class="hint">${esc(state.manager.name)} · OVR ${state.manager.rating}</div></div></div>
+      <div class="grid two" style="margin-top:16px"><div class="card"><div class="section-title" style="margin-top:0"><h3>Next fixture</h3><span class="pill">Week ${next?.week||'—'}</span></div>${next?fixtureFocus(next,false):'<div class="empty">No fixture scheduled.</div>'}<div class="section-title"><h3>Recent form</h3><div class="form">${form.length?form.map(x=>`<span class="form-pill ${x}">${x}</span>`).join(''):'<span class="muted">No matches yet</span>'}</div></div>${prev?`<div class="metric-row"><span>Latest result</span><strong>${club(prev.home).name} ${prev.scoreHome}–${prev.scoreAway} ${club(prev.away).name}</strong></div>`:''}</div><div class="card"><div class="section-title" style="margin-top:0"><h3>Owner Inbox</h3><a data-page-jump="inbox">View all</a></div><div class="kpi"><div class="value">${pendingInbox().length}</div><div class="hint">pending owner decision${pendingInbox().length===1?'':'s'}</div></div>${pendingInbox().slice(0,3).map(e=>`<div class="news-item"><strong>${esc(e.title)}</strong><time>${eventLabel(e.type)} · expires ${e.expiresWeek==null?'when acknowledged':`week ${e.expiresWeek}`}</time></div>`).join('')||'<div class="empty">No pending decisions.</div>'}</div></div>
+      <div class="grid two" style="margin-top:16px"><div class="card"><div class="section-title" style="margin-top:0"><h3>League snapshot</h3><a data-page-jump="league">Full table</a></div>${leagueMiniTable(top5)}</div><div class="card"><div class="section-title" style="margin-top:0"><h3>Finance snapshot</h3><a data-page-jump="finances">Details</a></div><div class="metric-row"><span>Weekly wage bill</span><strong>${fmtMoney(wageBill())} / ${fmtMoney(state.wageBudget)}</strong></div><div class="metric-row"><span>Average attendance</span><strong>${avgAtt?avgAtt.toLocaleString():'—'}</strong></div><div class="metric-row"><span>Ticket price</span><strong>€${state.ticketPrice}</strong></div><div class="metric-row"><span>Expected next home demand</span><strong>${expectedAttendance().toLocaleString()}</strong></div></div></div>
+      <div class="card" style="margin-top:16px"><div class="section-title" style="margin-top:0"><h3>Club news</h3><span class="sub">Generated from real game events</span></div><div class="news">${newsList(6)}</div></div>`;
+  }
+
+  function managerStatus(){if(state.manager.temporary)return'Interim';if(state.manager.satisfaction>=72)return'Stable';if(state.manager.satisfaction>=50)return'Watchful';return'Under pressure';}
+  function fixtureFocus(fx,showResult=true){const h=club(fx.home),a=club(fx.away);return `<div class="fixture-focus"><div><div class="team-name">${esc(h.name)}</div><div class="sub">${fx.home===GALAXY_ID?'HOME':`#${leaguePosition(h.id)} · STR ${Math.round(h.squadQuality)}`}</div></div><div>${fx.played&&showResult?`<div class="result-score">${fx.scoreHome}–${fx.scoreAway}</div>`:'<span class="vs">VS</span>'}</div><div><div class="team-name">${esc(a.name)}</div><div class="sub">${fx.away===GALAXY_ID?'AWAY':`#${leaguePosition(a.id)} · STR ${Math.round(a.squadQuality)}`}</div></div></div>`;}
+  function leagueMiniTable(rows){return `<div class="table-wrap"><table style="min-width:0"><thead><tr><th>#</th><th>Club</th><th>P</th><th>GD</th><th>PTS</th></tr></thead><tbody>${rows.map((c,i)=>`<tr class="${c.id===GALAXY_ID?'me-row':''}"><td>${i+1}</td><td>${esc(c.name)}</td><td>${c.p}</td><td>${c.gf-c.ga>0?'+':''}${c.gf-c.ga}</td><td><strong>${c.pts}</strong></td></tr>`).join('')}</tbody></table></div>`;}
+  function newsList(n){return state.news.slice(0,n).map(x=>`<div class="news-item">${esc(x.text)}<time>Season ${x.season} · Week ${x.week}</time></div>`).join('')||'<div class="empty">No club news yet.</div>';}
+
+  function inboxPage(){
+    const pending=pendingInbox();const resolved=state.inbox.filter(e=>e.resolved).slice().reverse();
+    return `${renderPageHeader('Owner Inbox','Board-level decisions, proposals and club situations.')}<div class="grid two"><div><div class="section-title" style="margin-top:0"><h3>Pending decisions — ${pending.length}</h3></div><div class="grid">${pending.map(inboxCard).join('')||'<div class="card empty">Inbox clear. New situations may appear as weeks advance.</div>'}</div></div><div><div class="section-title" style="margin-top:0"><h3>Resolved / expired</h3></div><div class="grid">${resolved.slice(0,8).map(e=>inboxCard(e,true)).join('')||'<div class="card empty">No resolved decisions yet.</div>'}</div></div></div>`;
+  }
+  function eventLabel(type){return ({transfer_offer:'Transfer offer',signing_request:'Manager request',contract:'Contract decision',sponsor:'Sponsorship',budget_request:'Manager request',financial_pressure:'Finance warning',youth:'Youth academy'})[type]||'Club event';}
+  function inboxCard(ev,compact=false){
+    let actions='';
+    if(!ev.resolved){
+      if(ev.type==='transfer_offer')actions=`<button class="btn good" data-event="${ev.id}" data-action="accept">ACCEPT ${fmtMoney(ev.meta.offer)}</button><button class="btn bad" data-event="${ev.id}" data-action="reject">REJECT OFFER</button>`;
+      else if(ev.type==='signing_request'){const can=state.balance>=ev.meta.fee&&state.transferBudget>=ev.meta.fee&&wageBill()+ev.meta.player.wage<=state.wageBudget;actions=`<button class="btn good" data-event="${ev.id}" data-action="approve" ${can?'':'disabled'}>APPROVE SIGNING</button><button class="btn bad" data-event="${ev.id}" data-action="decline">DECLINE</button>${can?'':`<span class="sub">Insufficient cash, transfer budget or wage room.</span>`}`;}
+      else if(ev.type==='contract')actions=`<button class="btn good" data-event="${ev.id}" data-action="offer">OFFER CONTRACT</button><button class="btn bad" data-event="${ev.id}" data-action="decline">DECLINE</button>`;
+      else if(ev.type==='sponsor')actions=`<button class="btn good" data-event="${ev.id}" data-action="fixed">TAKE GUARANTEED PACKAGE</button><button class="btn primary" data-event="${ev.id}" data-action="bonus">TAKE WIN-BONUS PACKAGE</button>`;
+      else if(ev.type==='budget_request')actions=`<button class="btn good" data-event="${ev.id}" data-action="approve">APPROVE +€500k</button><button class="btn bad" data-event="${ev.id}" data-action="reject">REJECT</button>`;
+      else if(ev.type==='financial_pressure')actions=`<button class="btn" data-event="${ev.id}" data-action="ack">ACKNOWLEDGE</button>`;
+      else if(ev.type==='youth')actions=`<button class="btn good" data-event="${ev.id}" data-action="promote">PROMOTE TO FIRST TEAM</button><button class="btn bad" data-event="${ev.id}" data-action="release">RELEASE</button>`;
+    }
+    return `<div class="card inbox-card ${ev.category||''} ${ev.resolved?'resolved':''}"><div class="inbox-top"><div><div class="eyebrow">${eventLabel(ev.type)}</div><h3>${esc(ev.title)}</h3></div><span class="pill">${ev.resolved?esc(ev.resolution||'Resolved'):`Week ${ev.createdWeek}`}</span></div>${compact?'':`<p>${esc(ev.body)}</p>${ev.quote?`<div class="quote">${esc(ev.quote)}</div>`:''}`}<div class="actions">${actions}</div></div>`;
+  }
+
+  function squadPage(){
+    const sorted=[...state.players].sort((a,b)=>squadComparator(a,b));
+    return `${renderPageHeader('Squad','Information for ownership decisions. Team selection remains the manager’s responsibility.',`<select id="squadSort" class="btn"><option value="overall" ${squadSort==='overall'?'selected':''}>Sort: Rating</option><option value="age" ${squadSort==='age'?'selected':''}>Sort: Age</option><option value="position" ${squadSort==='position'?'selected':''}>Sort: Position</option><option value="value" ${squadSort==='value'?'selected':''}>Sort: Value</option><option value="wage" ${squadSort==='wage'?'selected':''}>Sort: Wage</option></select>`)}<div class="card flat"><div class="table-wrap"><table><thead><tr><th>Player</th><th>Pos</th><th>Age</th><th>OVR</th><th>Status</th><th>Apps</th><th>Goals</th><th>Value</th><th>Wage</th><th>Contract</th></tr></thead><tbody>${sorted.map(p=>{const st=playerStatus(p);return `<tr class="clickable" data-player="${p.id}"><td><strong>${esc(p.name)}</strong><div class="sub">${esc(p.personality)} · ${esc(p.style)}</div></td><td><span class="pos">${p.position}</span></td><td>${p.age}</td><td><span class="ovr">${p.overall}</span></td><td><span class="status"><i class="dot ${st[1]}"></i>${st[0]}</span></td><td>${p.apps}</td><td>${p.goals}</td><td>${fmtMoney(p.value)}</td><td>${fmtMoney(p.wage)}/wk</td><td>${p.contract}y</td></tr>`}).join('')}</tbody></table></div></div>`;
+  }
+  function squadComparator(a,b){if(squadSort==='age')return a.age-b.age;if(squadSort==='position')return a.position.localeCompare(b.position)||b.overall-a.overall;if(squadSort==='value')return b.value-a.value;if(squadSort==='wage')return b.wage-a.wage;return b.overall-a.overall;}
+
+  function managerPage(){
+    const m=state.manager;const candidates=state.managerCandidates||[];
+    return `${renderPageHeader('Manager','You appoint the football leader. He selects the team, tactics and rotation.')}<div class="grid two"><div class="card"><div class="manager-head"><div class="avatar">${m.name.split(' ').map(x=>x[0]).join('').slice(0,2)}</div><div><div class="eyebrow">First-team manager</div><div class="manager-name">${esc(m.name)}</div><div class="manager-meta">Age ${m.age} · OVR ${m.rating} · ${esc(m.philosophy)} · ${fmtMoney(m.salary)}/week</div></div></div><div class="attrs"><div class="attr"><strong>${m.coaching}</strong><span>Coaching</span></div><div class="attr"><strong>${m.motivation}</strong><span>Motivation</span></div><div class="attr"><strong>${m.tactical}</strong><span>Tactical</span></div><div class="attr"><strong>${m.youth}</strong><span>Youth</span></div><div class="attr"><strong>${m.discipline}</strong><span>Discipline</span></div></div><div class="metric-row"><span>Contract</span><strong>${m.temporary?'Interim':`${m.contractYears} year${m.contractYears===1?'':'s'} remaining`}</strong></div><div class="metric-row"><span>Board satisfaction</span><strong>${m.satisfaction}/100</strong></div><div class="metric-row"><span>Owner can set tactics?</span><strong class="negative">No — manager responsibility</strong></div><div class="actions">${m.temporary?'':`<button class="btn bad" id="fireManagerBtn">FIRE MANAGER</button>`}</div></div><div class="card"><h3>Manager influence</h3><p class="sub" style="line-height:1.65">Manager quality affects lineup quality, consistency, morale and match performance. The owner never picks formations, the starting XI, substitutions or tactical instructions.</p><div class="metric-row"><span>Preferred philosophy</span><strong>${esc(m.philosophy)}</strong></div><div class="metric-row"><span>Current status</span><strong>${managerStatus()}</strong></div><div class="metric-row"><span>Estimated weekly cost</span><strong>${fmtMoney(m.salary)}</strong></div></div></div>${candidates.length?`<div class="section-title"><h3>Manager candidates</h3><span class="sub">Choose one candidate to end interim management.</span></div><div class="grid three">${candidates.map(c=>`<div class="card candidate"><div class="eyebrow">Candidate</div><h3>${esc(c.name)}</h3><div class="rating">${c.rating}</div><div class="sub">Age ${c.age} · ${esc(c.philosophy)}</div><div class="metric-row"><span>Salary demand</span><strong>${fmtMoney(c.salary)}/wk</strong></div><div class="metric-row"><span>Contract</span><strong>${c.contractYears} years</strong></div><div class="metric-row"><span>Strength</span><strong>${bestManagerAttr(c)}</strong></div><div class="metric-row"><span>Weakness</span><strong>${worstManagerAttr(c)}</strong></div><button class="btn primary" data-hire-manager="${c.id}">HIRE</button></div>`).join('')}</div>`:''}`;
+  }
+  function bestManagerAttr(m){return Object.entries({Coaching:m.coaching,Motivation:m.motivation,Tactical:m.tactical,'Youth development':m.youth,Discipline:m.discipline}).sort((a,b)=>b[1]-a[1])[0][0];}
+  function worstManagerAttr(m){return Object.entries({Coaching:m.coaching,Motivation:m.motivation,Tactical:m.tactical,'Youth development':m.youth,Discipline:m.discipline}).sort((a,b)=>a[1]-b[1])[0][0];}
+
+  function fixturesPage(){
+    return `${renderPageHeader('Fixtures & Results','All 10 clubs play every week. Each club plays 18 home-and-away league matches.')}<div class="grid">${Array.from({length:18},(_,i)=>i+1).map(w=>{const fxs=state.fixtures.filter(f=>f.week===w);return `<div class="card"><div class="section-title" style="margin-top:0"><h3>Week ${w}</h3><span class="pill">${w<state.week?'Completed':w===state.week?'Current':'Scheduled'}</span></div>${fxs.map(f=>`<div class="metric-row ${f.home===GALAXY_ID||f.away===GALAXY_ID?'me-row':''}"><span>${esc(club(f.home).name)} <strong style="color:white">${f.played?f.scoreHome:'vs'}</strong> ${f.played?`<strong style="color:white">${f.scoreAway}</strong>`:''} ${esc(club(f.away).name)}</span><span>${f.played?(f.home===GALAXY_ID||f.away===GALAXY_ID?`<button class="btn ghost" data-match="${f.id}">View match</button>`:'FT'):'Saturday'}</span></div>`).join('')}</div>`}).join('')}</div>`;
+  }
+
+  function leaguePage(){const rows=leagueSorted();return `${renderPageHeader('League','10 clubs · 18 matches · win 3 points, draw 1 point.')}<div class="card flat"><div class="table-wrap"><table><thead><tr><th>Pos</th><th>Club</th><th>P</th><th>W</th><th>D</th><th>L</th><th>GF</th><th>GA</th><th>GD</th><th>PTS</th><th>Form</th></tr></thead><tbody>${rows.map((c,i)=>`<tr class="${c.id===GALAXY_ID?'me-row':''}"><td class="${i<3?'rank-'+(i+1):''}">${i+1}</td><td><strong>${esc(c.name)}</strong></td><td>${c.p}</td><td>${c.w}</td><td>${c.d}</td><td>${c.l}</td><td>${c.gf}</td><td>${c.ga}</td><td>${c.gf-c.ga>0?'+':''}${c.gf-c.ga}</td><td><strong>${c.pts}</strong></td><td><div class="form">${c.form.slice(-5).map(x=>`<span class="form-pill ${x}" style="width:22px;height:22px">${x}</span>`).join('')}</div></td></tr>`).join('')}</tbody></table></div></div>`;}
+
+  function transfersPage(){
+    const transferEvents=pendingInbox().filter(e=>['transfer_offer','signing_request'].includes(e.type));
+    return `${renderPageHeader('Transfers','No giant transfer market. Opportunities arrive through bids, manager requests and scouting recommendations.')}<div class="grid two"><div><div class="section-title" style="margin-top:0"><h3>Current opportunities</h3></div><div class="grid">${transferEvents.map(inboxCard).join('')||'<div class="card empty">No active transfer opportunities.</div>'}</div></div><div><div class="card"><h3>Transfer position</h3><div class="metric-row"><span>Transfer budget</span><strong>${fmtMoney(state.transferBudget)}</strong></div><div class="metric-row"><span>Cash balance</span><strong>${fmtMoney(state.balance)}</strong></div><div class="metric-row"><span>Wages</span><strong>${fmtMoney(wageBill())} / ${fmtMoney(state.wageBudget)}</strong></div><div class="metric-row"><span>Squad size</span><strong>${state.players.length}</strong></div></div></div></div><div class="grid two" style="margin-top:16px"><div class="card"><h3>Purchases</h3>${transferHistory(state.transfers.purchases)}</div><div class="card"><h3>Sales</h3>${transferHistory(state.transfers.sales)}</div></div>`;
+  }
+  function transferHistory(arr){return arr.length?arr.slice(0,10).map(t=>`<div class="metric-row"><span>${esc(t.player)} · ${esc(t.season)}</span><strong>${fmtMoney(t.fee)}</strong></div>`).join(''):'<div class="empty">No transfers yet.</div>';}
+
+  function financesPage(){
+    const f=state.seasonFinances;const net=f.revenue-f.expenses;const wagePct=clamp(Math.round(wageBill()/state.wageBudget*100),0,150);
+    return `${renderPageHeader('Finances','A simple operating model: cash, transfers, wages, sponsorship and matchday income.')}<div class="grid kpis"><div class="card kpi"><div class="label">Cash balance</div><div class="value">${fmtMoney(state.balance)}</div><div class="hint">${state.balance<500000?'Financial pressure':'Operating normally'}</div></div><div class="card kpi"><div class="label">Transfer budget</div><div class="value">${fmtMoney(state.transferBudget)}</div><div class="hint">Cannot exceed actual available cash in a transaction</div></div><div class="card kpi"><div class="label">Weekly wage bill</div><div class="value">${fmtMoney(wageBill())}</div><div class="hint">Budget ${fmtMoney(state.wageBudget)}</div></div><div class="card kpi"><div class="label">Season net</div><div class="value ${net>=0?'positive':'negative'}">${fmtMoney(net)}</div><div class="hint">Revenue less expenses & investments</div></div></div><div class="grid two" style="margin-top:16px"><div class="card"><h3>Season revenue</h3><div class="metric-row"><span>Total revenue</span><strong>${fmtMoney(f.revenue)}</strong></div><div class="metric-row"><span>Ticket income</span><strong>${fmtMoney(f.ticketIncome)}</strong></div><div class="metric-row"><span>Matchday income</span><strong>${fmtMoney(f.matchdayIncome)}</strong></div><div class="metric-row"><span>Sponsorship</span><strong>${fmtMoney(f.sponsorship)}</strong></div><div class="metric-row"><span>Transfer income</span><strong>${fmtMoney(f.transferIncome)}</strong></div><div class="metric-row"><span>Prize money</span><strong>${fmtMoney(f.prizeMoney)}</strong></div></div><div class="card"><h3>Season expenses</h3><div class="metric-row"><span>Total cash expenses</span><strong>${fmtMoney(f.expenses)}</strong></div><div class="metric-row"><span>Player wages</span><strong>${fmtMoney(f.wages)}</strong></div><div class="metric-row"><span>Manager wages</span><strong>${fmtMoney(f.managerWages)}</strong></div><div class="metric-row"><span>Transfer spending</span><strong>${fmtMoney(f.transferExpenses)}</strong></div><div class="metric-row"><span>Facilities / stadium</span><strong>${fmtMoney(f.facilityExpenses)}</strong></div></div></div><div class="card" style="margin-top:16px"><div class="progress-label"><span>Weekly wage budget</span><span>${wagePct}% used</span></div><div class="bar"><i style="width:${Math.min(wagePct,100)}%"></i></div></div>`;
+  }
+
+  function stadiumPage(){
+    const nextCap=state.stadium.capacity===12000?15000:state.stadium.capacity===15000?20000:null;const nextCost=state.stadium.capacity===12000?2000000:state.stadium.capacity===15000?4000000:null;const avg=state.stadium.homeGames?Math.round(state.stadium.attendanceTotal/state.stadium.homeGames):0;
+    return `${renderPageHeader('Stadium & Facilities','Set commercial policy and invest in long-term club infrastructure.')}<div class="grid two"><div class="card"><div class="eyebrow">Andromeda Stadium</div><h3 style="font-size:24px;margin-top:7px">${state.stadium.capacity.toLocaleString()} seats</h3><div class="metric-row"><span>Average attendance</span><strong>${avg?avg.toLocaleString():'—'}</strong></div><div class="metric-row"><span>Last attendance</span><strong>${state.stadium.lastAttendance?state.stadium.lastAttendance.toLocaleString():'—'}</strong></div><div class="metric-row"><span>Ticket price</span><strong>€${state.ticketPrice}</strong></div><div style="margin-top:18px"><div class="eyebrow">Ticket price control</div><div class="big-price">€${state.ticketPrice}</div><input id="ticketSlider" class="slider" type="range" min="15" max="50" step="1" value="${state.ticketPrice}"><div class="progress-label"><span>€15</span><span>Expected demand ≈ ${expectedAttendance().toLocaleString()}</span><span>€50</span></div><p class="sub">Higher prices increase revenue per supporter but reduce demand. The exact optimum is intentionally hidden.</p></div>${nextCap?`<div class="upgrade"><div><h4>Expand to ${nextCap.toLocaleString()}</h4><p>Raises the long-term matchday revenue ceiling.</p></div><button class="btn primary" id="upgradeStadium" ${state.balance<nextCost?'disabled':''}>${fmtMoney(nextCost)}</button></div>`:`<div class="season-banner" style="margin-top:16px">Andromeda Stadium is at the MVP maximum capacity of 20,000.</div>`}</div><div class="card"><div class="upgrade"><div><h4>Training Centre · Level ${state.facilities.training}/5</h4><p class="tooltip" title="Better facilities improve player development and recovery.">Improves development and fitness recovery.</p></div>${state.facilities.training<5?`<button class="btn" data-upgrade-facility="training" ${state.balance<facilityCost('training')?'disabled':''}>Upgrade ${fmtMoney(facilityCost('training'))}</button>`:'<span class="pill">MAX</span>'}</div><div class="upgrade"><div><h4>Youth Academy · Level ${state.facilities.youth}/5</h4><p>Improves the chance and quality of academy graduates.</p></div>${state.facilities.youth<5?`<button class="btn" data-upgrade-facility="youth" ${state.balance<facilityCost('youth')?'disabled':''}>Upgrade ${fmtMoney(facilityCost('youth'))}</button>`:'<span class="pill">MAX</span>'}</div></div></div>`;
+  }
+
+  function historyPage(){
+    const hist=state.history;const best=hist.length?Math.min(...hist.map(h=>h.position)):'—';const goals=hist.length?Math.max(...hist.map(h=>h.goals)):'—';
+    return `${renderPageHeader('Club History','Every completed season becomes part of your persistent Galaxy FC story.')}<div class="grid kpis"><div class="card kpi"><div class="label">Best league finish</div><div class="value">${best==='—'?'—':ordinal(best)}</div></div><div class="card kpi"><div class="label">Most goals by top scorer</div><div class="value">${goals}</div></div><div class="card kpi"><div class="label">Highest club balance</div><div class="value">${fmtMoney(state.recordBalance||state.balance)}</div></div><div class="card kpi"><div class="label">Biggest transfer sale</div><div class="value">${state.biggestSale?fmtMoney(state.biggestSale):'—'}</div></div></div><div class="card flat" style="margin-top:16px"><div class="table-wrap"><table><thead><tr><th>Season</th><th>Position</th><th>Points</th><th>Top scorer</th><th>Balance</th></tr></thead><tbody>${hist.length?hist.map(h=>`<tr><td>${esc(h.season)}</td><td>${ordinal(h.position)}</td><td>${h.points}</td><td>${esc(h.topScorer)}</td><td>${fmtMoney(h.balance)}</td></tr>`).join(''):'<tr><td colspan="5" class="empty">Complete your first season to create club history.</td></tr>'}</tbody></table></div></div>`;
+  }
+
+  function settingsPage(){return `${renderPageHeader('Settings','Local single-player save management.')}<div class="grid two"><div class="card"><h3>Save status</h3><div class="metric-row"><span>Storage</span><strong>Browser localStorage</strong></div><div class="metric-row"><span>Status</span><strong class="positive">Auto-saved</strong></div><div class="metric-row"><span>Backend</span><strong>None</strong></div><div class="metric-row"><span>Current save</span><strong>Season ${state.season}, Week ${state.week}</strong></div></div><div class="card"><h3>Restart Game</h3><p class="sub">This will permanently delete your current club and restart the simulation from Season 1.</p><button id="restartGameBtn" class="btn bad">RESTART GAME</button></div></div>`;}
+
+  function bindCommon(){
+    document.querySelectorAll('[data-page]').forEach(b=>b.onclick=()=>{currentPage=b.dataset.page;modal=null;closeSidebar();render();});
+    document.querySelectorAll('[data-page-jump]').forEach(b=>b.onclick=()=>{currentPage=b.dataset.pageJump;render();});
+    const nw=document.getElementById('nextWeekBtn');if(nw)nw.onclick=()=>state.seasonEnd?(modal={type:'seasonEnd'},renderModal()):nextWeek();
+    const mb=document.getElementById('menuBtn');if(mb)mb.onclick=()=>{document.getElementById('sidebar').classList.add('open');document.getElementById('mobileOverlay').classList.add('show');};
+    const ov=document.getElementById('mobileOverlay');if(ov)ov.onclick=closeSidebar;
+  }
+  function closeSidebar(){document.getElementById('sidebar')?.classList.remove('open');document.getElementById('mobileOverlay')?.classList.remove('show');}
+  function bindPage(){
+    document.querySelectorAll('[data-event]').forEach(b=>b.onclick=()=>resolveEvent(b.dataset.event,b.dataset.action));
+    document.querySelectorAll('[data-player]').forEach(r=>r.onclick=()=>{modal={type:'player',playerId:r.dataset.player};renderModal();});
+    document.querySelectorAll('[data-match]').forEach(b=>b.onclick=()=>{modal={type:'match',fixtureId:b.dataset.match};renderModal();});
+    document.querySelectorAll('[data-hire-manager]').forEach(b=>b.onclick=()=>hireManager(b.dataset.hireManager));
+    document.querySelectorAll('[data-upgrade-facility]').forEach(b=>b.onclick=()=>upgradeFacility(b.dataset.upgradeFacility));
+    const sort=document.getElementById('squadSort');if(sort)sort.onchange=e=>{squadSort=e.target.value;renderPageOnly();};
+    const fire=document.getElementById('fireManagerBtn');if(fire)fire.onclick=fireManager;
+    const ts=document.getElementById('ticketSlider');if(ts)ts.oninput=e=>setTicketPrice(e.target.value);
+    const us=document.getElementById('upgradeStadium');if(us)us.onclick=upgradeStadium;
+    const rg=document.getElementById('restartGameBtn');if(rg)rg.onclick=()=>{if(confirm('This will permanently delete your current club and restart the simulation.'))resetGame();};
+  }
+
+  function renderModal(){
+    document.querySelector('.modal-backdrop')?.remove();if(!modal)return;
+    const wrap=document.createElement('div');wrap.className='modal-backdrop';
+    if(modal.type==='weekSummary')wrap.innerHTML=weekSummaryModal(modal.data);
+    else if(modal.type==='seasonEnd')wrap.innerHTML=seasonEndModal();
+    else if(modal.type==='player')wrap.innerHTML=playerModal(modal.playerId);
+    else if(modal.type==='match')wrap.innerHTML=matchModal(modal.fixtureId);
+    document.body.appendChild(wrap);
+    wrap.querySelectorAll('[data-close-modal]').forEach(b=>b.onclick=()=>{modal=null;wrap.remove();});
+    wrap.onclick=e=>{if(e.target===wrap&&modal?.type!=='seasonEnd'){modal=null;wrap.remove();}};
+    wrap.querySelectorAll('[data-modal-page]').forEach(b=>b.onclick=()=>{currentPage=b.dataset.modalPage;modal=null;wrap.remove();render();});
+    wrap.querySelector('[data-start-next-season]')?.addEventListener('click',startNextSeason);
+    wrap.querySelector('[data-view-last-match]')?.addEventListener('click',()=>{modal={type:'match',fixtureId:state.lastMatch?.fixtureId};renderModal();});
+  }
+  function modalFrame(content,closable=true,wide=false){return `<div class="modal ${wide?'wide':''}"><div class="modal-head"><div></div>${closable?'<button class="close" data-close-modal>×</button>':''}</div>${content}</div>`;}
+  function weekSummaryModal(data){
+    const fx=state.fixtures.find(f=>f.id===data.fixtureId);const moved=data.after===data.before?`remain ${ordinal(data.after)}`:`move from ${ordinal(data.before)} → ${ordinal(data.after)}`;
+    return modalFrame(`<div class="eyebrow">Week ${data.week} complete</div><h2>WEEK ${data.week} COMPLETE</h2>${fx?`<div class="summary-score"><div class="clubs">${esc(club(fx.home).name)} · FULL TIME · ${esc(club(fx.away).name)}</div><div class="score">${fx.scoreHome}–${fx.scoreAway}</div><div class="sub">${fx.events.map(e=>`${esc(e.scorer)} ${e.minute}'`).join(' · ')||'No goals'}</div></div>`:''}<div class="grid two"><div class="card flat"><h3>TABLE</h3><p>Galaxy FC ${moved}.</p></div><div class="card flat"><h3>FINANCE</h3><p>Sponsorship +${fmtMoney(data.finance.sponsor)} · weekly costs -${fmtMoney(data.finance.cost)}</p></div></div><div class="card flat" style="margin-top:12px"><h3>NEWS</h3>${newsList(3)}</div><div class="actions"><button class="btn" data-view-last-match>VIEW MATCH</button><button class="btn" data-modal-page="inbox">GO TO INBOX</button><button class="btn primary" data-close-modal>CONTINUE</button></div>`,true,true);
+  }
+  function seasonEndModal(){
+    const s=state.seasonEnd;if(!s)return modalFrame('<div class="empty">Season review unavailable.</div>');
+    return modalFrame(`<div class="eyebrow">Season ${esc(s.seasonLabel)} complete</div><h2>GALAXY FC — ${ordinal(s.position)}</h2><div class="grid kpis" style="margin-top:18px"><div class="card kpi"><div class="label">Points</div><div class="value">${s.stats.pts}</div><div class="hint">${s.stats.w}W · ${s.stats.d}D · ${s.stats.l}L</div></div><div class="card kpi"><div class="label">Goals</div><div class="value">${s.stats.gf}–${s.stats.ga}</div><div class="hint">18 league matches</div></div><div class="card kpi"><div class="label">Final balance</div><div class="value">${fmtMoney(s.balance)}</div><div class="hint">Season net ${fmtMoney(s.profit)}</div></div><div class="card kpi"><div class="label">Avg attendance</div><div class="value">${s.avgAttendance.toLocaleString()}</div><div class="hint">Capacity ${state.stadium.capacity.toLocaleString()}</div></div></div><div class="grid two" style="margin-top:14px"><div class="card flat"><div class="metric-row"><span>Best player</span><strong>${esc(s.bestPlayer)}</strong></div><div class="metric-row"><span>Top scorer</span><strong>${esc(s.topScorer)} — ${s.topGoals}</strong></div><div class="metric-row"><span>Prize money</span><strong>${fmtMoney(s.prize)}</strong></div><div class="metric-row"><span>Reputation</span><strong>${s.oldRep} → ${s.newRep}</strong></div></div><div class="card flat"><h3>Manager evaluation</h3><p>${managerEvaluation(s.position)}</p><p class="sub">Manager OVR ${state.manager.rating} · Board satisfaction ${state.manager.satisfaction}/100</p></div></div><div class="actions"><button class="btn primary" data-start-next-season>START NEXT SEASON</button></div>`,false,true);
+  }
+  function managerEvaluation(pos){if(pos<=2)return'Excellent sporting season. Expectations will rise.';if(pos<=4)return'Good season with clear progress.';if(pos<=7)return'Stable mid-table outcome. The board has room to decide its next direction.';return'Disappointing league performance. Manager and squad decisions deserve review.';}
+  function playerModal(id){const p=state.players.find(x=>x.id===id);if(!p)return modalFrame('<div class="empty">Player unavailable.</div>');const st=playerStatus(p);const avg=p.apps?(p.ratingSum/p.apps).toFixed(2):'—';return modalFrame(`<div class="eyebrow">Player profile</div><h2>${esc(p.name)}</h2><p class="sub">${p.position} · Age ${p.age} · ${esc(p.personality)} · ${esc(p.style)}</p><div class="grid three" style="margin-top:16px"><div class="card kpi"><div class="label">Overall</div><div class="value">${p.overall}</div></div><div class="card kpi"><div class="label">Value</div><div class="value">${fmtMoney(p.value)}</div></div><div class="card kpi"><div class="label">Status</div><div class="value" style="font-size:20px"><span class="status"><i class="dot ${st[1]}"></i>${st[0]}</span></div></div></div><div class="card flat" style="margin-top:12px"><div class="metric-row"><span>Appearances</span><strong>${p.apps}</strong></div><div class="metric-row"><span>Goals / assists</span><strong>${p.goals} / ${p.assists}</strong></div><div class="metric-row"><span>Average rating</span><strong>${avg}</strong></div><div class="metric-row"><span>Weekly wage</span><strong>${fmtMoney(p.wage)}</strong></div><div class="metric-row"><span>Contract</span><strong>${p.contract} year${p.contract===1?'':'s'}</strong></div><div class="metric-row"><span>Recent form</span><strong>${p.recent.length?p.recent.join(' · '):'—'}</strong></div></div><p class="sub">Hidden fitness, sharpness and morale influence how the manager values this player for selection. The owner cannot override the manager’s lineup.</p>`,true,true);}
+  function matchModal(id){const fx=state.fixtures.find(f=>f.id===id);if(!fx||!fx.played)return modalFrame('<div class="empty">Match details unavailable.</div>');const isG=fx.home===GALAXY_ID||fx.away===GALAXY_ID;return modalFrame(`<div class="eyebrow">Full time · Week ${fx.week}</div><div class="summary-score"><div class="clubs">${esc(club(fx.home).name)} · ${esc(club(fx.away).name)}</div><div class="score">${fx.scoreHome}–${fx.scoreAway}</div><div class="sub">${fx.events.map(e=>`${esc(e.scorer)} ${e.minute}'`).join(' · ')||'No goals'}</div></div><div class="grid two"><div class="card flat"><div class="metric-row"><span>Possession</span><strong>${fx.stats.possessionHome}% – ${100-fx.stats.possessionHome}%</strong></div><div class="metric-row"><span>Shots</span><strong>${fx.stats.shotsHome} – ${fx.stats.shotsAway}</strong></div>${fx.stats.attendance?`<div class="metric-row"><span>Attendance</span><strong>${fx.stats.attendance.toLocaleString()}</strong></div>`:''}</div><div class="card flat"><h3>Manager note</h3><p class="sub">${isG?`${state.manager.name} selected the team automatically based on ability, fitness, sharpness, morale and his own football preferences.`:'AI-controlled league match.'}</p></div></div>`,true,true);}
+
+  function toast(msg){document.querySelector('.toast')?.remove();const t=document.createElement('div');t.className='toast';t.textContent=msg;document.body.appendChild(t);setTimeout(()=>t.remove(),3200);}
+
+  render();
+})();
+</script>
+</body>
+</html>
